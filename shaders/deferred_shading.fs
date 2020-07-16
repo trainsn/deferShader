@@ -16,6 +16,10 @@ uniform int uShowNormals;
 uniform int uShowPosition;
 uniform int uPerspectiveProjection;
 
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform mat3 uNMatrix;
+
 uniform vec3 uAmbientColor;
 uniform vec3 uPointLightingLocation;
 uniform vec3 uPointLightingColor;
@@ -25,12 +29,12 @@ uniform vec3 uPointLightingColor1;
 void main()
 {
 	// retrive data from gbuffer
-	vec3 vPosition = texture(gPosition, TexCoords).rgb;
+	vec3 vPosition = (uMVMatrix * vec4( texture(gPosition, TexCoords).rgb, 1.0 )).xyz;
 	vec3 vTransformedNormal = texture(gNormal, TexCoords).rgb;
 	vec4 vDiffuseColor = texture(gDiffuseColor, TexCoords).rgba;
 
 	// calculate lighting as usual 
-	/*vec3 ambient = vDiffuseColor.rgb * uAmbientColor;
+	vec3 ambient = vDiffuseColor.rgb * uAmbientColor;
 	vec3 color = ambient;
 
 	if (uUseLighting){
@@ -59,7 +63,7 @@ void main()
 	}
 	vec4 final_color = vec4(color, 1.0);
 
-	FragColor = final_color;*/
+	FragColor = final_color;
 
 	if ( uShowDepth ) {
 		// FragColor = mix( vec4( 1.0 ), vec4( vec3( 0.0 ), 1.0 ), smoothstep( 0.1, 1.0, fog_coord ) );

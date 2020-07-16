@@ -3,6 +3,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <GL/glm/glm.hpp>
+#include <GL/glm/gtc/matrix_transform.hpp>
+#include <GL/glm/gtc/type_ptr.hpp>
+#include <GL/glm/gtx/transform2.hpp>
+
 #include "shader.h"
 
 #include <iostream>
@@ -26,6 +31,21 @@ glm::vec3 base_color(10.0 / 255.0, 10.0 / 255.0, 10.0 / 255.0);
 const unsigned int SCR_WIDTH = 1024;
 const unsigned int SCR_HEIGHT = 1024;
 
+glm::mat4 pMatrix;
+glm::mat4 mvMatrix;
+glm::mat3 normalMatrix;
+
+// Information related to the camera 
+float dist = 2.5;
+float theta, phi;
+glm::vec3 direction;
+glm::vec3 up;
+glm::vec3 center;
+glm::vec3 eye;
+
+glm::mat4 view;
+glm::mat4 model;
+
 // Lighting power.
 float lighting_power = 2;
 
@@ -41,8 +61,8 @@ int use_lighting = 1;
 
 // Render different buffers.
 int show_depth = 0;
-int show_normals = 1;
-int show_position = 0;
+int show_normals = 0;
+int show_position = 1;
 
 // Used to orbit the point lights.
 float point_light_theta = 1.57;
@@ -54,6 +74,17 @@ float point_light_theta1 = 1.57;
 float point_light_phi1 = 1.57;
 float point_light_theta_step1 = 0.3;
 float point_light_phi_step1 = 0.3;
+
+void setMatrixUniforms(Shader ourShader) {
+	// Pass the vertex shader the projection matrix and the model-view matrix.
+	ourShader.setMat4("uPMatrix", pMatrix);
+	ourShader.setMat4("uMVMatrix", mvMatrix);
+
+	// Pass the vertex normal matrix to the shader so it can compute the lighting calculations.
+	normalMatrix = glm::transpose(glm::inverse(glm::mat3(mvMatrix)));
+
+	ourShader.setMat3("uNMatrix", normalMatrix);
+}
 
 int main()
 {
@@ -98,6 +129,72 @@ int main()
 	shaderLightingPass.setInt("gDiffuseColor", 2);
 	shaderLightingPass.setInt("gMask", 3);
 	shaderLightingPass.setInt("gDepth", 4);
+
+	// create the projection matrix 
+	float near = 0.1f;
+	float far = 5.0f;
+	float fov_r = 30.0f;
+
+	if (perspective_projection) {
+		// Resulting perspective matrix, FOV in radians, aspect ratio, near, and far clipping plane.
+		pMatrix = glm::perspective(fov_r, (float)SCR_WIDTH / (float)SCR_HEIGHT, near, far);
+	}
+	else {
+		// The goal is to have the object be about the same size in the window
+		// during orthographic project as it is during perspective projection.
+
+		float a = (float)SCR_WIDTH / (float)SCR_HEIGHT;
+		float h = 2 * (25 * tan(fov_r / 2)); // Window aspect ratio.
+		float w = h * a; // Knowing the new window height size, get the new window width size based on the aspect ratio.
+
+		// The canvas' origin is the upper left corner. To the right is the positive x-axis. 
+		// Going down is the positive y-axis.
+
+		// Any object at the world origin would appear at the upper left hand corner.
+		// Shift the origin to the middle of the screen.
+
+		// Also, invert the y-axis as WebgL's positive y-axis points up while the canvas' positive
+		// y-axis points down the screen.
+
+		//           (0,O)------------------------(w,0)
+		//               |                        |
+		//               |                        |
+		//               |                        |
+		//           (0,h)------------------------(w,h)
+		//
+		//  (-(w/2),(h/2))------------------------((w/2),(h/2))
+		//               |                        |
+		//               |         (0,0)          |gbo
+		//               |                        |
+		// (-(w/2),-(h/2))------------------------((w/2),-(h/2))
+
+		// Resulting perspective matrix, left, right, bottom, top, near, and far clipping plane.
+		pMatrix = glm::ortho(-(w / 2),
+			(w / 2),
+			-(h / 2),
+			(h / 2),
+			near,
+			far);
+	}
+
+	// Move to the 3D space origin.
+	mvMatrix = glm::mat4(1.0f);
+
+	// transform
+	theta = M_PI;
+	phi = 0;
+	//direction = glm::vec3(sin(theta) * cos(phi) * dist, sin(theta) * sin(phi) * dist, cos(theta) * dist);
+	//up = glm::vec3(sin(theta - M_PI / 2) * cos(phi), sin(theta - M_PI / 2) * sin(phi), cos(theta - M_PI / 2));
+	direction = glm::vec3(0.0f, dist, 0.0f);
+	up = glm::vec3(0.0f, 0.0f, 1.0f);
+	center = glm::vec3(0.0f, 0.0f, 0.0f);
+	eye = center + direction;
+
+	view = glm::lookAt(eye, center, up);
+	model = glm::mat4(1.0f);
+	//model *= glm::rotate(rotation_radians, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	mvMatrix = view * model;
 
 	// load and create a texture 
 	// -------------------------	
@@ -240,6 +337,7 @@ int main()
 		shaderLightingPass.setInt("uShowDepth", show_depth);
 		shaderLightingPass.setInt("uShowNormals", show_normals);
 		shaderLightingPass.setInt("uShowPosition", show_position);
+		setMatrixUniforms(shaderLightingPass);
 
 		// Disable alpha blending.
 		glDisable(GL_BLEND);
