@@ -28,6 +28,9 @@ uniform vec3 uPointLightingColor1;
 
 void main()
 {
+	// backgroundColor
+    vec4 bgColor = vec4(1.0, 1.0, 1.0, 0.0);
+
 	// retrive data from gbuffer
 	vec3 vPosition = (uMVMatrix * vec4( texture(gPosition, TexCoords).rgb, 1.0 )).xyz;
 	vec3 vTransformedNormal = texture(gNormal, TexCoords).rgb;
@@ -62,16 +65,17 @@ void main()
 		color = ambient + diffuse + diffuse1 + specular + specular1;
 	}
 	vec4 final_color = vec4(color, 1.0);
+	float mask = texture(gMask, TexCoords).r;
 
-	FragColor = final_color;
+	FragColor = mask * vec4(color, vDiffuseColor.a) + (1 - mask) * bgColor;
 
 	if ( uShowDepth ) {
 		// FragColor = mix( vec4( 1.0 ), vec4( vec3( 0.0 ), 1.0 ), smoothstep( 0.1, 1.0, fog_coord ) );
 		//FragColor = vDiffuseColor;
 		//float depth = texture(gDepth, TexCoords).r;
 		//FragColor = vec4( vec3(depth), 1.0 );
-		//float mask = texture(gMask, TexCoords).r;
-		//FragColor = vec4( vec3(mask), 1.0 );
+		float mask = texture(gMask, TexCoords).r;
+		FragColor = vec4( vec3(mask), 1.0 );
 		
 	}
 	if (uShowNormals) {
