@@ -36,7 +36,7 @@ glm::mat4 mvMatrix;
 glm::mat3 normalMatrix;
 
 // Information related to the camera 
-float dist = 2.5;
+float dist = 2.3;
 float theta, phi;
 glm::vec3 direction;
 glm::vec3 up;
@@ -127,8 +127,8 @@ int main()
 	shaderLightingPass.setInt("gDepth", 4);
 
 	// create the projection matrix 
-	float near = 0.1f;
-	float far = 5.0f;
+	float near = 1.79f;
+	float far = 2.81f;
 	float fov_r = 30.0f;
 
 	if (perspective_projection) {
