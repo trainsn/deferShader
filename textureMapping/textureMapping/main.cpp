@@ -32,6 +32,7 @@ const unsigned int SCR_WIDTH = 256;
 const unsigned int SCR_HEIGHT = 256;
 
 glm::mat4 pMatrix;
+glm::mat4 invPMatrix;
 glm::mat4 mvMatrix;
 glm::mat3 normalMatrix;
 
@@ -76,9 +77,12 @@ void setMatrixUniforms(Shader ourShader) {
 	ourShader.setMat4("uPMatrix", pMatrix);
 	ourShader.setMat4("uMVMatrix", mvMatrix);
 
+	// inverse of projection matrix 
+	invPMatrix = glm::inverse(pMatrix);
+	ourShader.setMat4("uInvPMatrix", invPMatrix);
+
 	// Pass the vertex normal matrix to the shader so it can compute the lighting calculations.
 	normalMatrix = glm::transpose(glm::inverse(glm::mat3(mvMatrix)));
-
 	ourShader.setMat3("uNMatrix", normalMatrix);
 }
 
