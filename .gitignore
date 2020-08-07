@@ -350,3 +350,5 @@ MigrationBackup/
 .ionide/
 
 *.h5
+*.png
+readhdf5.py
