@@ -14,6 +14,9 @@
 #include <algorithm>
 
 #include "hdf5.h"
+#define STBI_MSC_SECURE_CRT
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 using namespace std;
 
@@ -73,8 +76,8 @@ float point_light_phi = M_PI / 2;
 float point_light_theta_step = 0.39 / 2;
 float point_light_phi_step = 0.39;
 
-float point_light_theta1 = 43.0245139107 / 180.0 * M_PI;
-float point_light_phi1 = 101.1242862229 / 180.0 * M_PI;
+float point_light_theta1 = M_PI / 2;
+float point_light_phi1 = M_PI / 2;
 float point_light_theta_step1 = 0.3;
 float point_light_phi_step1 = 0.3;
 
@@ -301,9 +304,31 @@ int main()
 	second_last_dash = filename_s.rfind("_", last_dash - 1);
 	point_light_theta1 = stof(filename_s.substr(second_last_dash + 1, last_dash - second_last_dash - 1));
 	point_light_theta1 = point_light_theta1 * M_PI / 180;
+
+	/*unsigned int outBuffer;
+	glGenFramebuffers(1, &outBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, outBuffer);
+	unsigned int gOutput;
+	// position color buffer 
+	glGenTextures(1, &gOutput);
+	glBindTexture(GL_TEXTURE_2D, gOutput);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gOutput, 0);
+	
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	//finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
+
 	// render loop
 	// -----------
-	while (!glfwWindowShouldClose(window))
+	//while (!glfwWindowShouldClose(window))
 	{
 		// input
 		// -----
@@ -311,9 +336,11 @@ int main()
 
 		// render
 		// ------
+
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//glBindFramebuffer(GL_FRAMEBUFFER, outBuffer);
 		shaderLightingPass.use();
 
 		// set lighting sources 
@@ -495,6 +522,45 @@ int main()
 		// render container
 		renderQuad();
 
+		char imagename[1024];
+		sprintf(imagename, "res.png");
+		float* pBuffer = new float[SCR_WIDTH * SCR_HEIGHT * 4];
+		unsigned char* pImage = new unsigned char[SCR_WIDTH * SCR_HEIGHT * 3];
+		glReadBuffer(GL_BACK);
+		glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGBA, GL_FLOAT, pBuffer);
+		
+		for (unsigned int j = 0; j < SCR_HEIGHT; j++) {
+			for (unsigned int k = 0; k < SCR_WIDTH; k++) {
+				int index = j * SCR_WIDTH + k;
+				pImage[index * 3 + 0] = unsigned char(min(pBuffer[index * 4 + 0] * 255, 255.0f));
+				pImage[index * 3 + 1] = unsigned char(min(pBuffer[index * 4 + 1] * 255, 255.0f));
+				pImage[index * 3 + 2] = unsigned char(min(pBuffer[index * 4 + 2] * 255, 255.0f));
+		
+		stbi_write_png(imagename, SCR_WIDTH, SCR_HEIGHT, 3, pImage, SCR_WIDTH * 3);
+		//char filename_output[1024];
+		//sprintf(filename_output, "res.h5");
+		//hid_t file_output, dset_output;
+
+		//// Create a new file using the default properties 
+		//file = H5Fcreate(filename_output, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+		//// Create dataspace.  Setting maximum size to NULL sets the maximum size to be the current size.
+		//space3 = H5Screate_simple(1, dims3, NULL);
+		//space1 = H5Screate_simple(1, dims1, NULL);	
+
+		//dset_output = H5Dcreate(file, "output", H5T_NATIVE_FLOAT, space3, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+		//// write the data to the dataset
+		//float* oBuffer = new float[SCR_WIDTH * SCR_HEIGHT * 3];
+		//glReadBuffer(GL_COLOR_ATTACHMENT0);
+		//glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGB, GL_FLOAT, oBuffer);
+		//status = H5Dwrite(dset_output, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, oBuffer);
+
+		//delete oBuffer;
+
+		//status = H5Dclose(dset_output);
+		//status = H5Sclose(space3);
+		//status = H5Fclose(file);
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
