@@ -53,8 +53,8 @@ glm::mat4 view;
 glm::mat4 model;
 
 // Lighting power.
-float lighting_power = 0.0;
-float lighting_power1 = 0.4;
+float lighting_power = 0.5;
+float lighting_power1 = 0.0;
 
 // Used for time based animation.
 float time_last = 0;
@@ -63,7 +63,7 @@ float time_last = 0;
 int use_lighting = 1;
 
 // Use shadow?
-int use_shadow = 1;
+int use_shadow = 0;
 
 // Render different buffers.
 int show_depth = 0;
@@ -100,7 +100,7 @@ void setMatrixUniforms(Shader ourShader) {
 	ourShader.setMat3("uNMatrix", normalMatrix);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	// glfw: initialize and configure
 	// ------------------------------
@@ -200,7 +200,7 @@ int main()
 	unsigned int gPosition, gNormal, gMask, gDiffuseColor, gDepth, gShadowMask, gShadowDepth, gShadowMask1, gShadowDepth1;
 
 	char filename[1024];
-	sprintf(filename, "MPAS_000000_3.27890_20.000000_90.0000026563_100.0000018721.h5", 0);
+	sprintf(filename, argv[1]);
 	string filename_s = filename;
 	int last_dot = filename_s.rfind(".");
 	int last_dash = filename_s.rfind("_");
@@ -295,7 +295,7 @@ int main()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, cBuffer);
 
 	char shadow_filename[1024];
-	sprintf(shadow_filename, "MPAS_000000_3.27890_20.000000_90.0000026563_90.0000026563.h5");
+	sprintf(shadow_filename, "MPAS_000000_3.27890_20.000000_90.0000026563_100.0000018721.h5");
 	filename_s = shadow_filename;
 	last_dot = filename_s.rfind(".");
 	last_dash = filename_s.rfind("_");
@@ -535,6 +535,8 @@ int main()
 				pImage[index * 3 + 0] = unsigned char(min(pBuffer[index * 4 + 0] * 255, 255.0f));
 				pImage[index * 3 + 1] = unsigned char(min(pBuffer[index * 4 + 1] * 255, 255.0f));
 				pImage[index * 3 + 2] = unsigned char(min(pBuffer[index * 4 + 2] * 255, 255.0f));
+			}
+		}
 		
 		stbi_write_png(imagename, SCR_WIDTH, SCR_HEIGHT, 3, pImage, SCR_WIDTH * 3);
 		//char filename_output[1024];

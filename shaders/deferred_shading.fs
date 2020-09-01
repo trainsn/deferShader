@@ -106,9 +106,9 @@ void main()
 	vPosLightSpace = lightSpaceMatrix * uInvVMatrix * vec4(vPosition, 1.0);
 	vPosLightSpace1 = lightSpaceMatrix1 * uInvVMatrix * vec4(vPosition, 1.0);
 
-	FragColor = vec4(TexCoords * 2.0 - 1.0, depth * 2 - 1, 1.0);
+	//FragColor = vec4(TexCoords * 2.0 - 1.0, depth * 2 - 1, 1.0);
 
-	/*// calculate lighting as usual 
+	// calculate lighting as usual 
 	vec3 ambient = vDiffuseColor.rgb * uAmbientColor;
 	vec3 color = ambient;
 
@@ -153,11 +153,11 @@ void main()
 		//float shadowDepth = texture(gShadowDepth1, TexCoords).r;
 		//FragColor = vec4( vec3(shadowDepth), 1.0 );
 		//float shadowMask = texture(gShadowMask1, TexCoords).r;
-		FragColor = vec4( vec3(mask), 1.0 );
+		FragColor = vec4( vec3(depth), 1.0 );
 	}
 	if (uShowNormals) {
 		vec3 nTN      = normalize(vTransformedNormal);
-		FragColor = vec4(nTN, 1.0);
+		FragColor = vec4(nTN * 0.5 + 0.5, 1.0) * mask;
 		
 		//FragColor = vec4(vec3((length(vTransformedNormal))), 1.0);
 		//if (mask == 0)
@@ -167,5 +167,5 @@ void main()
 		//vec3 nP       = vPosition.xyz;
 		vec3 nP = vPosLightSpace.xyz;
 		FragColor  = mask * vec4(nP , 1.0);
-	}*/
+	}
 }
