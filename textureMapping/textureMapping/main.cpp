@@ -54,7 +54,7 @@ glm::mat4 model;
 
 // Lighting power.
 float lighting_power = 0.5;
-float lighting_power1 = 0.0;
+float lighting_power1 = 0;
 
 // Used for time based animation.
 float time_last = 0;
